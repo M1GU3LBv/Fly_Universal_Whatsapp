@@ -10,8 +10,14 @@ const express = require('express');
 const app = express();
 const googleTTS = require('google-tts-api');
 
-mongoose.connect(process.env.MONGO_PRIVATE_URL).then(() => {
+mongoose.connect("mongodb://mongo:4edF-H3CDCe31dGH3AbFgB13AFghgagd@roundhouse.proxy.rlwy.net:57347").then(async () => {
     const store = new MongoStore({ mongoose: mongoose });
+    let sessionData = null;
+
+    if (await store.sessionExists('client')) {
+        sessionData = await store.extract('client');
+    }
+
     const client = new Client({
         restartOnAuthFail: true,
         puppeteer: {
@@ -20,11 +26,14 @@ mongoose.connect(process.env.MONGO_PRIVATE_URL).then(() => {
         },
         ffmpeg: './ffmpeg.exe',
         authStrategy: new RemoteAuth({
-            store: store,
-            backupSyncIntervalMs: 300000
-        })
-    });
 
+            store: store,
+            backupSyncIntervalMs: 300000,
+            session: 'client'
+        }),
+        
+    });
+    
     async function initializeClient(client) {
         try {
             await client.initialize();
@@ -36,9 +45,22 @@ mongoose.connect(process.env.MONGO_PRIVATE_URL).then(() => {
     
     initializeClient(client);
 
-client.on('remote_session_saved', () => {
-    console.log('Session data saved successfully');
-});
+    client.on('remote_session_saved', () => {
+        console.log('Session data saved successfully');
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
  
 let qrSVG = '';
 const config = require('./config/config.json');
@@ -62,16 +84,11 @@ app.use(express.static('public'));
 
 client.on('ready', () => {
     console.clear();
-    const consoleText = './config/console.txt';
-    fs.readFile(consoleText, 'utf-8', (err, data) => {
-        if (err) {
-            console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] Console Text not found!`.yellow);
-            console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] ${config.name} is Already!`.green);
-        } else {
-            console.log(data.green);
-            console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] ${config.name} is Already!`.green);
-        }
-    });
+    console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] ready`);
+    console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] ${client.info.pushname}`);    
+    
+    // store.save({ session: 'client' });
+    
 });
 app.use(express.json()); // Para poder parsear el cuerpo de las solicitudes POST en formato JSON
 
