@@ -1,5 +1,7 @@
 const { Client, LocalAuth, MessageAck, MessageMedia } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+
+const { MongoStore } = require('wwebjs-mongo');
+const mongoose = require('mongoose');
 const moment = require('moment-timezone');
 const QRCode = require('qrcode')
 const fs = require('fs');
@@ -13,22 +15,43 @@ if(fs.existsSync('./session.json')) {
 }else{
     console.log('No session data found, scanning QR code.');
 }
-const client = new Client({
-    restartOnAuthFail: true,
-    puppeteer: {
-        headless: true,
-        args: [ '--no-sandbox', '--disable-setuid-sandbox' ]
-    },
-    ffmpeg: './ffmpeg.exe',
-    authStrategy: new LocalAuth({ clientId: "client" }),
-    session: sessionData
+mongoose.connect(process.os.environ["MONGO_URL"]).then(() => {
+    const store = new MongoStore({ mongoose: mongoose });
+    const client = new Client({
+        restartOnAuthFail: true,
+        puppeteer: {
+            headless: true,
+            args: [ '--no-sandbox', '--disable-setuid-sandbox' ]
+        },
+        ffmpeg: './ffmpeg.exe',
+        authStrategy: new RemoteAuth({
+            store: store,
+            backupSyncIntervalMs: 300000
+        }),
+        session: sessionData
+    });
+
+    async function initializeClient(client) {
+        try {
+            await client.initialize();
+        } catch (error) {
+            console.log('Error initializing client, retrying in 5 seconds', error);
+            setTimeout(() => initializeClient(client), 5000);
+        }
+    }
+    
+    initializeClient(client);
 });
+client.on('remote_session_saved', () => {
+    console.log('Session data saved successfully');
+});
+ 
 let qrSVG = '';
 const config = require('./config/config.json');
 
 client.on('qr', async (qr) => {
-    console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] `);
-    qrSVG = await QRCode.toString(qr, { type: 'svg', scale: 1}); // scale: 2 hace que el código QR sea más pequeño
+    console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] Escanea el codigo` );
+    qrSVG = await QRCode.toString(qr, { type: 'svg'}); 
 });
 
 app.get('/qr', (req, res) => {
@@ -44,7 +67,11 @@ app.use(express.static('public'));
 
 client.on('authenticated', (session) => {
     console.log('Authenticated successfully!');
-    fs.writeFileSync('./session.json', JSON.stringify(session));
+    if (session) {
+        fs.writeFileSync('./session.json', JSON.stringify(session));
+    } else {
+        console.log('Session is undefined!');
+    }
 });
 
 client.on('ready', () => {
@@ -377,13 +404,4 @@ client.on("message", async (message) => {
     }
   });
   
-  async function initializeClient(client) {
-    try {
-        await client.initialize();
-    } catch (error) {
-        console.log('Error initializing client, retrying in 5 seconds', error);
-        setTimeout(() => initializeClient(client), 5000);
-    }
-}
-
-initializeClient(client);
+  
