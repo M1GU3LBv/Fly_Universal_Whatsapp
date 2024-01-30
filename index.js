@@ -59,14 +59,6 @@ app.get('/qr', (req, res) => {
 
 app.use(express.static('public'));
 
-client.on('authenticated', (session) => {
-    console.log('Authenticated successfully!');
-    if (session) {
-        fs.writeFileSync('./session.json', JSON.stringify(session));
-    } else {
-        console.log('Session is undefined!');
-    }
-});
 
 client.on('ready', () => {
     console.clear();
