@@ -1,4 +1,4 @@
-const { Client, LocalAuth, MessageAck, MessageMedia } = require('whatsapp-web.js');
+const { Client, RemoteAuth, MessageMedia } = require('whatsapp-web.js');
 
 const { MongoStore } = require('wwebjs-mongo');
 const mongoose = require('mongoose');
@@ -9,12 +9,7 @@ const path = require('path');
 const express = require('express');
 const app = express();
 const googleTTS = require('google-tts-api');
-let sessionData = null;
-if(fs.existsSync('./session.json')) {
-    sessionData = require('./session.json');
-}else{
-    console.log('No session data found, scanning QR code.');
-}
+
 mongoose.connect(process.os.environ["MONGO_URL"]).then(() => {
     const store = new MongoStore({ mongoose: mongoose });
     const client = new Client({
@@ -27,8 +22,7 @@ mongoose.connect(process.os.environ["MONGO_URL"]).then(() => {
         authStrategy: new RemoteAuth({
             store: store,
             backupSyncIntervalMs: 300000
-        }),
-        session: sessionData
+        })
     });
 
     async function initializeClient(client) {
@@ -41,7 +35,7 @@ mongoose.connect(process.os.environ["MONGO_URL"]).then(() => {
     }
     
     initializeClient(client);
-});
+
 client.on('remote_session_saved', () => {
     console.log('Session data saved successfully');
 });
@@ -404,4 +398,4 @@ client.on("message", async (message) => {
     }
   });
   
-  
+});

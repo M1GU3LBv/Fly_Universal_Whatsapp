@@ -17,6 +17,7 @@
     "ffmpeg": "^0.0.4",
     "google-tts-api": "^2.0.2",
     "moment-timezone": "^0.5.44",
+    "mongoose": "^8.1.1",
     "qrcode": "^1.5.3",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.23.0",
