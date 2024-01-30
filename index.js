@@ -69,6 +69,10 @@ app.post('/send-message', async (req, res) => {
 });
 
 const port = process.env.PORT || 3000; // 3000 es el puerto predeterminado en caso de que no se proporcione PORT
+app.post('/logout', (req, res) => {
+    client.logout();
+    res.redirect('/qr');
+});
 
 app.listen(port, () => {
     console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] Server is running on port ${port}!`.green);
