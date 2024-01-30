@@ -1,6 +1,9 @@
 const { Client, LocalAuth} = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const moment = require('moment-timezone');
+const QRCode = require('qrcode')
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const app = express();
 const client = new Client({
@@ -14,14 +17,17 @@ const client = new Client({
 });
 const config = require('./config/config.json');
 
-
-client.on('qr', (qr) => {
-    console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] Scan the QR below : `);
-    qrcode.generate(qr, { small: true });
+app.use(express.static('public'));
+app.get('/generate-qr', async (req, res) => {
+    const qrSVG = await QRCode.toString('Some text', { type: 'svg' });
+    fs.writeFileSync('./public/qr.svg', qrSVG);
+    res.send('QR Code generated!');
+});
+app.get('/qr', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/qr.svg'));
 });
 
 client.on('ready', () => {
-    console.log("start")
     console.clear();
     const consoleText = './config/console.txt';
     fs.readFile(consoleText, 'utf-8', (err, data) => {
