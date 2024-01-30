@@ -10,7 +10,7 @@ const express = require('express');
 const app = express();
 const googleTTS = require('google-tts-api');
 
-mongoose.connect(process.os.environ["MONGO_URL"]).then(() => {
+mongoose.connect(process.os.environ["MONGO_PRIVATE_URL"]).then(() => {
     const store = new MongoStore({ mongoose: mongoose });
     const client = new Client({
         restartOnAuthFail: true,
