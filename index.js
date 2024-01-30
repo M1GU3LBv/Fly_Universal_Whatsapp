@@ -10,7 +10,7 @@ const express = require('express');
 const app = express();
 const googleTTS = require('google-tts-api');
 
-mongoose.connect("mongodb://mongo:4edF-H3CDCe31dGH3AbFgB13AFghgagd@roundhouse.proxy.rlwy.net:57347").then(async () => {
+mongoose.connect(process.env.MONGO_PRIVATE_URL).then(async () => {
     const store = new MongoStore({ mongoose: mongoose });
     let sessionData = null;
 
