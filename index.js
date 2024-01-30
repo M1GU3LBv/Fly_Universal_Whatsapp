@@ -7,6 +7,10 @@ const path = require('path');
 const express = require('express');
 const app = express();
 const googleTTS = require('google-tts-api');
+let sessionData = null;
+if(fs.existsSync('./session.json')) {
+    sessionData = require('./session.json');
+}
 const client = new Client({
     restartOnAuthFail: true,
     puppeteer: {
@@ -370,10 +374,7 @@ client.on("message", async (message) => {
       );
     }
   });
-  let sessionData;
-  if(fs.existsSync('./session.json')) {
-      sessionData = require('./session.json');
-  }
+  
   async function initializeClient(client) {
     try {
         await client.initialize();
