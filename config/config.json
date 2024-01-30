@@ -1,0 +1,10 @@
+{
+    "name": "Flybot",
+    "author": "Noodlexz",
+    "version": "1.2v",
+    "update":"12/02/2024",
+    "github": "https://github.com/anllacarpro",
+    "prefix": "!",
+    "timezone": "Asia/Jakarta",
+    "groups": true
+}
