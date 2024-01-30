@@ -75,7 +75,7 @@ app.post('/logout', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] Server is running on port ${port}!`.green);
+    console.log(`Servidor iniciado en el puerto ${port}`);
 });
 
 
@@ -366,4 +366,13 @@ client.on("message", async (message) => {
     }
   });
 
-client.initialize();
+  async function initializeClient(client) {
+    try {
+        await client.initialize();
+    } catch (error) {
+        console.log('Error initializing client, retrying in 5 seconds', error);
+        setTimeout(() => initializeClient(client), 5000);
+    }
+}
+
+initializeClient(client);
