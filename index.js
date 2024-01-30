@@ -15,17 +15,26 @@ const client = new Client({
     ffmpeg: './ffmpeg.exe',
     authStrategy: new LocalAuth({ clientId: "client" })
 });
+let qrSVG = '';
 const config = require('./config/config.json');
 
-app.use(express.static('public'));
-app.get('/generate-qr', async (req, res) => {
-    const qrSVG = await QRCode.toString('Some text', { type: 'svg' });
-    fs.writeFileSync('./public/qr.svg', qrSVG);
-    res.send('QR Code generated!');
+client.on('qr', async (qr) => {
+    console.log(`[${moment().tz(config.timezone).format('HH:mm:ss')}] `);
+    qrSVG = await QRCode.toString(qr, { type: 'svg', scale: 1}); // scale: 2 hace que el código QR sea más pequeño
 });
+
 app.get('/qr', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/qr.svg'));
+    const html = `
+        <div style="width: 500px; height: 500px;">
+            ${qrSVG}
+        </div>
+    `;
+    res.send(html);
 });
+
+app.use(express.static('public'));
+
+
 
 client.on('ready', () => {
     console.clear();
