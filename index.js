@@ -14,7 +14,8 @@ const client = new Client({
         args: [ '--no-sandbox', '--disable-setuid-sandbox' ]
     },
     ffmpeg: './ffmpeg.exe',
-    authStrategy: new LocalAuth({ clientId: "client" })
+    authStrategy: new LocalAuth({ clientId: "client" }),
+    session: sessionData
 });
 let qrSVG = '';
 const config = require('./config/config.json');
@@ -35,7 +36,10 @@ app.get('/qr', (req, res) => {
 
 app.use(express.static('public'));
 
-
+client.on('authenticated', (session) => {
+    console.log('Authenticated successfully!');
+    fs.writeFileSync('./session.json', JSON.stringify(session));
+});
 
 client.on('ready', () => {
     console.clear();
@@ -366,7 +370,10 @@ client.on("message", async (message) => {
       );
     }
   });
-
+  let sessionData;
+  if(fs.existsSync('./session.json')) {
+      sessionData = require('./session.json');
+  }
   async function initializeClient(client) {
     try {
         await client.initialize();
