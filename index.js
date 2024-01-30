@@ -13,8 +13,14 @@ if(fs.existsSync('./session.json')) {
 }else{
     console.log('No session data found, scanning QR code.');
 }
-const client = new Client({ 
-    puppeteer: { headless: true },
+const client = new Client({
+    restartOnAuthFail: true,
+    puppeteer: {
+        headless: true,
+        args: [ '--no-sandbox', '--disable-setuid-sandbox' ]
+    },
+    ffmpeg: './ffmpeg.exe',
+    authStrategy: new LocalAuth({ clientId: "client" }),
     session: sessionData
 });
 let qrSVG = '';
